@@ -450,7 +450,7 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 					if (!RSG::canvas->_interpolation_data.interpolation_enabled || !F->interpolated) {
 						F->xform_cache = xf * F->xform_curr;
 					} else {
-						real_t f = Engine::get_singleton()->get_physics_interpolation_fraction();
+						real_t f = RSG::canvas->_interpolation_data.fraction;
 						TransformInterpolator::interpolate_transform_2d(F->xform_prev, F->xform_curr, F->xform_cache, f);
 						F->xform_cache = xf * F->xform_cache;
 					}
@@ -496,7 +496,7 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 					if (!RSG::canvas->_interpolation_data.interpolation_enabled || !cl->interpolated) {
 						cl->xform_cache = xf * cl->xform_curr;
 					} else {
-						real_t f = Engine::get_singleton()->get_physics_interpolation_fraction();
+						real_t f = RSG::canvas->_interpolation_data.fraction;
 						TransformInterpolator::interpolate_transform_2d(cl->xform_prev, cl->xform_curr, cl->xform_cache, f);
 						cl->xform_cache = xf * cl->xform_cache;
 					}
@@ -532,7 +532,7 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 					if (!RSG::canvas->_interpolation_data.interpolation_enabled || !cl->interpolated) {
 						cl->xform_cache = xf * cl->xform_curr;
 					} else {
-						real_t f = Engine::get_singleton()->get_physics_interpolation_fraction();
+						real_t f = RSG::canvas->_interpolation_data.fraction;
 						TransformInterpolator::interpolate_transform_2d(cl->xform_prev, cl->xform_curr, cl->xform_cache, f);
 						cl->xform_cache = xf * cl->xform_cache;
 					}
@@ -573,7 +573,7 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 					if (!RSG::canvas->_interpolation_data.interpolation_enabled || !F->interpolated) {
 						F->xform_cache = xf * F->xform_curr;
 					} else {
-						real_t f = Engine::get_singleton()->get_physics_interpolation_fraction();
+						real_t f = RSG::canvas->_interpolation_data.fraction;
 						TransformInterpolator::interpolate_transform_2d(F->xform_prev, F->xform_curr, F->xform_cache, f);
 						F->xform_cache = xf * F->xform_cache;
 					}
@@ -659,7 +659,7 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 						if (!RSG::canvas->_interpolation_data.interpolation_enabled || !F->interpolated) {
 							F->xform_cache = xf * F->xform_curr;
 						} else {
-							real_t f = Engine::get_singleton()->get_physics_interpolation_fraction();
+							real_t f = RSG::canvas->_interpolation_data.fraction;
 							TransformInterpolator::interpolate_transform_2d(F->xform_prev, F->xform_curr, F->xform_cache, f);
 							F->xform_cache = xf * F->xform_cache;
 						}

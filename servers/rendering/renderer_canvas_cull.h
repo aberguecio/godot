@@ -390,6 +390,7 @@ public:
 	/* INTERPOLATION */
 
 	void tick();
+	void set_physics_interpolation_fraction(double p_fraction) { _interpolation_data.fraction = p_fraction; }
 	void update_interpolation_tick(bool p_process = true);
 	void set_physics_interpolation_enabled(bool p_enabled) { _interpolation_data.interpolation_enabled = p_enabled; }
 
@@ -411,6 +412,7 @@ public:
 		LocalVector<RID> *canvas_light_occluder_transform_update_list_prev = &canvas_light_occluder_transform_update_lists[1];
 
 		bool interpolation_enabled = false;
+		double fraction = 0.0;
 	} _interpolation_data;
 
 	RendererCanvasCull();

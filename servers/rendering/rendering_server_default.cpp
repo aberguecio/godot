@@ -30,6 +30,7 @@
 
 #include "rendering_server_default.h"
 
+#include "core/config/engine.h"
 #include "core/object/callable_mp.h"
 #include "core/os/os.h"
 #include "core/profiling/profiling.h"
@@ -73,7 +74,8 @@ void RenderingServerDefault::request_frame_drawn_callback(const Callable &p_call
 	frame_drawn_callbacks.push_back(p_callable);
 }
 
-void RenderingServerDefault::_draw(bool p_swap_buffers, double frame_step) {
+void RenderingServerDefault::_draw(bool p_swap_buffers, double frame_step, double p_interpolation_fraction) {
+	RSG::canvas->set_physics_interpolation_fraction(p_interpolation_fraction);
 	GodotProfileZoneGroupedFirst(_profile_zone, "rasterizer->begin_frame");
 	RSG::rasterizer->begin_frame(frame_step);
 
@@ -429,9 +431,18 @@ void RenderingServerDefault::_thread_loop() {
 
 /* INTERPOLATION */
 
-void RenderingServerDefault::set_physics_interpolation_enabled(bool p_enabled) {
+void RenderingServerDefault::_set_physics_interpolation_enabled(bool p_enabled) {
 	RSG::canvas->set_physics_interpolation_enabled(p_enabled);
 	RSG::scene->set_physics_interpolation_enabled(p_enabled);
+}
+
+void RenderingServerDefault::set_physics_interpolation_enabled(bool p_enabled) {
+	if (Thread::get_caller_id() != server_thread) {
+		command_queue.push(this, &RenderingServerDefault::_set_physics_interpolation_enabled, p_enabled);
+	} else {
+		command_queue.flush_if_pending();
+		_set_physics_interpolation_enabled(p_enabled);
+	}
 }
 
 /* EVENT QUEUING */
@@ -449,20 +460,42 @@ void RenderingServerDefault::draw(bool p_present, double frame_step) {
 	// Needs to be done before changes is reset to 0, to not force the editor to redraw.
 	RS::get_singleton()->emit_signal(SNAME("frame_pre_draw"));
 	changes = 0;
+	// Drawing can overlap the next main iteration, which changes this fraction.
+	const double fraction = Engine::get_singleton()->get_physics_interpolation_fraction();
 	if (create_thread) {
-		command_queue.push(this, &RenderingServerDefault::_draw, p_present, frame_step);
+		command_queue.push(this, &RenderingServerDefault::_draw, p_present, frame_step, fraction);
 	} else {
-		_draw(p_present, frame_step);
+		_draw(p_present, frame_step, fraction);
 	}
 }
 
-void RenderingServerDefault::tick() {
+void RenderingServerDefault::_tick() {
 	RSG::canvas->tick();
 	RSG::scene->tick();
 }
 
-void RenderingServerDefault::pre_draw(bool p_will_draw) {
+void RenderingServerDefault::tick() {
+	// Keep interpolation history ordered with queued resource mutations.
+	if (Thread::get_caller_id() != server_thread) {
+		command_queue.push(this, &RenderingServerDefault::_tick);
+	} else {
+		command_queue.flush_if_pending();
+		_tick();
+	}
+}
+
+void RenderingServerDefault::_pre_draw(bool p_will_draw) {
 	RSG::scene->pre_draw(p_will_draw);
+}
+
+void RenderingServerDefault::pre_draw(bool p_will_draw) {
+	// `Main::iteration()` synchronizes this work before the next fraction update.
+	if (Thread::get_caller_id() != server_thread) {
+		command_queue.push(this, &RenderingServerDefault::_pre_draw, p_will_draw);
+	} else {
+		command_queue.flush_if_pending();
+		_pre_draw(p_will_draw);
+	}
 }
 
 void RenderingServerDefault::_call_on_render_thread(const Callable &p_callable) {

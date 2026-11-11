@@ -32,7 +32,6 @@
 
 #ifdef GLES3_ENABLED
 
-#include "core/config/engine.h"
 #include "core/config/project_settings.h"
 #include "core/math/geometry_2d.h"
 #include "core/math/transform_interpolator.h"
@@ -231,7 +230,7 @@ void RasterizerCanvasGLES3::canvas_render_items(RID p_to_render_target, Item *p_
 			if (!RSG::canvas->_interpolation_data.interpolation_enabled || !l->interpolated) {
 				final_xform = l->xform_curr;
 			} else {
-				real_t f = Engine::get_singleton()->get_physics_interpolation_fraction();
+				real_t f = RSG::canvas->_interpolation_data.fraction;
 				TransformInterpolator::interpolate_transform_2d(l->xform_prev, l->xform_curr, final_xform, f);
 			}
 			// Convert light position to canvas coordinates, as all computation is done in canvas coordinates to avoid precision loss.
